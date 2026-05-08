@@ -9,11 +9,12 @@ import joblib
 import numpy as np
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
+import pandas as pd
 
 # The project root directory (where index.html, style.css, app.js live)
 PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
 
-app = Flask(__name__, static_folder=PROJECT_DIR, static_url_path='')
+app = Flask(__name__, static_folder=PROJECT_DIR, static_url_path='/datascience_donem_proje')
 CORS(app)  # Allow cross-origin requests from the frontend
 
 
@@ -23,7 +24,7 @@ def serve_index():
     return send_from_directory(PROJECT_DIR, 'index.html')
 
 # ─── Model Registry ────────────────────────────────────────────────
-MODEL_DIR = os.path.join(os.path.dirname(__file__), "Phishing_Website_Proje-main")
+MODEL_DIR = os.path.join(os.path.dirname(__file__))
 
 AVAILABLE_MODELS = {
     "random_forest": {
@@ -175,7 +176,7 @@ def predict():
             val = max(-1, min(1, val))
         feature_vector.append(val)
 
-    X = np.array([feature_vector], dtype=float)
+    X = pd.DataFrame([feature_vector], columns=FEATURE_NAMES)
 
     # --- predict -----------------------------------------------------
     try:
@@ -187,12 +188,12 @@ def predict():
         confidence = meta["accuracy"]  # fallback to model accuracy
         try:
             proba = model.predict_proba(X)[0]
-            if is_safe:
-                confidence = round(float(max(proba)) * 100, 2)
-            else:
-                confidence = round(float(max(proba)) * 100, 2)
+            proba_confidence = round(float(max(proba)) * 100, 2)
+            if proba_confidence > 80:
+                confidence = proba_confidence
+        # 80 altıysa zaten yukarıda meta["accuracy"] olarak set edildi, olduğu gibi kalır
         except AttributeError:
-            pass  # SVM with default config doesn't have predict_proba
+            pass
 
         return jsonify({
             "prediction": "safe" if is_safe else "phishing",
