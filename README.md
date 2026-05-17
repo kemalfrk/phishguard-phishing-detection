@@ -57,8 +57,8 @@ Phishing_Website_Proje/
 ### 1. Repoyu klonlayın
  
 ```bash
-git clone https://github.com/kemalfrk/Phishing_Website_Proje.git
-cd Phishing_Website_Proje
+git clone https://github.com/kemalfrk/phishguard-phishing-detection.git
+cd phishguard-phishing-detection
 ```
  
 ### 2. Bağımlılıkları yükleyin
