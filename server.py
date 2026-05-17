@@ -14,7 +14,7 @@ import pandas as pd
 # The project root directory (where index.html, style.css, app.js live)
 PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
 
-app = Flask(__name__, static_folder=PROJECT_DIR, static_url_path='/datascience_donem_proje')
+app = Flask(__name__, static_folder=PROJECT_DIR, static_url_path='')
 CORS(app)  # Allow cross-origin requests from the frontend
 
 
@@ -22,6 +22,12 @@ CORS(app)  # Allow cross-origin requests from the frontend
 def serve_index():
     """Serve the main GUI page."""
     return send_from_directory(PROJECT_DIR, 'index.html')
+
+
+@app.route('/<path:filename>')
+def serve_static(filename):
+    """Serve static assets (style.css, app.js, etc.) from the project directory."""
+    return send_from_directory(PROJECT_DIR, filename)
 
 # ─── Model Registry ────────────────────────────────────────────────
 MODEL_DIR = os.path.join(os.path.dirname(__file__))
@@ -62,6 +68,12 @@ AVAILABLE_MODELS = {
         "name": "ANN (Neural Network)",
         "needs_scaling": True,
         "accuracy": 96.56,
+    },
+    "xgboost": {
+        "file": "en_iyi_xgboost_modeli.pkl",
+        "name": "XGBoost",
+        "needs_scaling": False,
+        "accuracy": 97.74,
     },
 }
 

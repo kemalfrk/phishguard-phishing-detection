@@ -299,7 +299,7 @@
 
     // Gather features
     const features = gatherFeatures(url);
-    const selectedModel = modelSelect ? modelSelect.value : 'random_forest';
+    const selectedModel = modelSelect ? modelSelect.value : 'xgboost';
 
     // Reset result card to scanning state
     showScanningState(url);
