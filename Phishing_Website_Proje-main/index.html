@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="PhishGuard — AI-powered phishing link detection tool. Analyze URLs in real-time to determine if they are safe or malicious." />
+  <title>PhishGuard — Phishing Link Detector</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- Animated background particles -->
+  <canvas id="bg-canvas"></canvas>
+
+  <!-- Main container -->
+  <div class="app-container">
+
+    <!-- Header / Nav -->
+    <header class="header" id="header">
+      <div class="header-left">
+        <span class="header-logo-icon">🛡️</span>
+        <span class="header-brand">PhishGuard</span>
+      </div>
+      <nav class="header-right">
+        <a href="#" class="nav-link" id="nav-about">About</a>
+        <a href="#" class="nav-link" id="nav-help">Help</a>
+      </nav>
+    </header>
+
+    <!-- Hero section -->
+    <main class="main-content" id="main-content">
+      <div class="hero-section" id="hero-section">
+        <!-- Logo -->
+        <div class="logo-container" id="logo-container">
+          <div class="logo-shield">
+            <svg class="shield-svg" viewBox="0 0 80 96" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="shieldGrad" x1="0" y1="0" x2="80" y2="96" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stop-color="#00d4ff" />
+                  <stop offset="50%" stop-color="#7b2ff7" />
+                  <stop offset="100%" stop-color="#ff2d95" />
+                </linearGradient>
+                <linearGradient id="checkGrad" x1="20" y1="30" x2="60" y2="70" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stop-color="#00ffa3" />
+                  <stop offset="100%" stop-color="#00d4ff" />
+                </linearGradient>
+              </defs>
+              <path d="M40 4 L76 20 V52 C76 72 58 88 40 94 C22 88 4 72 4 52 V20 L40 4Z" 
+                    stroke="url(#shieldGrad)" stroke-width="3" fill="none" opacity="0.9"/>
+              <path d="M40 10 L70 24 V50 C70 68 54 82 40 88 C26 82 10 68 10 50 V24 L40 10Z" 
+                    fill="url(#shieldGrad)" opacity="0.08"/>
+              <path class="check-path" d="M24 50 L36 62 L58 36" stroke="url(#checkGrad)" stroke-width="5" 
+                    stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            </svg>
+          </div>
+          <h1 class="logo-text">
+            <span class="logo-phish">Phish</span><span class="logo-guard">Guard</span>
+          </h1>
+          <p class="logo-tagline">AI-Powered Phishing Detection</p>
+        </div>
+
+        <!-- Search / URL bar -->
+        <div class="search-container" id="search-container">
+          <div class="search-bar" id="search-bar">
+            <div class="search-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+              </svg>
+            </div>
+            <input type="text" class="search-input" id="url-input" 
+                   placeholder="Enter a URL to analyze (e.g. https://example.com/login)" 
+                   autocomplete="off" spellcheck="false" />
+            <button class="clear-btn" id="clear-btn" title="Clear" aria-label="Clear input" style="display:none;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          </div>
+
+          <!-- Model selector -->
+          <div class="model-selector" id="model-selector">
+            <label class="param-label" for="select-model">AI Model</label>
+            <select class="param-select" id="select-model" style="max-width:320px;">
+              <option value="xgboost" selected>🚀 XGBoost (~98%)</option>
+              <option value="random_forest">🌲 Random Forest (~97%)</option>
+              <option value="svm">⚡ SVM (~97%)</option>
+              <option value="ann">🧠 ANN / Neural Network (~97%)</option>
+              <option value="decision_tree">🌳 Decision Tree (~96%)</option>
+              <option value="knn">📍 KNN (~95%)</option>
+              <option value="logistic_regression">📈 Logistic Regression (~93%)</option>
+            </select>
+          </div>
+
+          <!-- Toggle for additional parameters -->
+          <button class="params-toggle" id="params-toggle">
+            <svg class="toggle-chevron" id="toggle-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+            <span>Advanced Feature Overrides (30 ARFF Features)</span>
+          </button>
+
+          <!-- Additional parameters panel — all 30 ARFF features -->
+          <div class="params-panel" id="params-panel">
+            <p class="params-note">Each feature uses the dataset encoding: <strong>1</strong> = Legitimate, <strong>0</strong> = Suspicious, <strong>-1</strong> = Phishing. "Auto" means the value is inferred from the URL.</p>
+            <div class="params-grid">
+              <!-- 1 -->
+              <div class="param-group">
+                <label class="param-label" for="f-having_IP_Address">IP Address</label>
+                <select class="param-select feature-select" id="f-having_IP_Address" data-feature="having_IP_Address">
+                  <option value="auto" selected>Auto</option>
+                  <option value="1">1 (Legit)</option>
+                  <option value="-1">-1 (Phishing)</option>
+                </select>
+                <span class="param-hint">URL uses an IP address instead of domain</span>
+              </div>
+              <!-- 2 -->
+              <div class="param-group">
+                <label class="param-label" for="f-URL_Length">URL Length</label>
+                <select class="param-select feature-select" id="f-URL_Length" data-feature="URL_Length">
+                  <option value="auto" selected>Auto</option>
+                  <option value="1">1 (Short/Legit)</option>
+                  <option value="0">0 (Medium)</option>
+                  <option value="-1">-1 (Long/Phishing)</option>
+                </select>
+                <span class="param-hint">Length of the entire URL</span>
+              </div>
+              <!-- 3 -->
+              <div class="param-group">
+                <label class="param-label" for="f-Shortining_Service">URL Shortener</label>
+                <select class="param-select feature-select" id="f-Shortining_Service" data-feature="Shortining_Service">
+                  <option value="auto" selected>Auto</option>
+                  <option value="1">1 (No shortener)</option>
+                  <option value="-1">-1 (Uses shortener)</option>
+                </select>
+                <span class="param-hint">Uses a URL shortening service (bit.ly, tinyurl…)</span>
+              </div>
+              <!-- 4 -->
+              <div class="param-group">
+                <label class="param-label" for="f-having_At_Symbol">@ Symbol</label>
+                <select class="param-select feature-select" id="f-having_At_Symbol" data-feature="having_At_Symbol">
+                  <option value="auto" selected>Auto</option>
+                  <option value="1">1 (No @)</option>
+                  <option value="-1">-1 (Has @)</option>
+                </select>
+                <span class="param-hint">URL contains @ symbol</span>
+              </div>
+              <!-- 5 -->
+              <div class="param-group">
+                <label class="param-label" for="f-double_slash_redirecting">Double Slash Redirect</label>
+                <select class="param-select feature-select" id="f-double_slash_redirecting" data-feature="double_slash_redirecting">
+                  <option value="auto" selected>Auto</option>
+                  <option value="1">1 (No redirect)</option>
+                  <option value="-1">-1 (Has redirect)</option>
+                </select>
+                <span class="param-hint">// appears after the protocol (redirect trick)</span>
+              </div>
+              <!-- 6 -->
+              <div class="param-group">
+                <label class="param-label" for="f-Prefix_Suffix">Prefix / Suffix (dash)</label>
+                <select class="param-select feature-select" id="f-Prefix_Suffix" data-feature="Prefix_Suffix">
+                  <option value="auto" selected>Auto</option>
+                  <option value="1">1 (No dash)</option>
+                  <option value="-1">-1 (Has dash in domain)</option>
+                </select>
+                <span class="param-hint">Domain name contains a dash (-)</span>
+              </div>
+              <!-- 7 -->
+              <div class="param-group">
+                <label class="param-label" for="f-having_Sub_Domain">Sub-Domains</label>
+                <select class="param-select feature-select" id="f-having_Sub_Domain" data-feature="having_Sub_Domain">
+                  <option value="auto" selected>Auto</option>
+                  <option value="1">1 (≤1 dot → Legit)</option>
+                  <option value="0">0 (2 dots → Suspicious)</option>
+                  <option value="-1">-1 (≥3 dots → Phishing)</option>
+                </select>
+                <span class="param-hint">Number of sub-domains (dots in domain part)</span>
+              </div>
+              <!-- 8 -->
+              <div class="param-group">
+                <label class="param-label" for="f-SSLfinal_State">SSL State</label>
+                <select class="param-select feature-select" id="f-SSLfinal_State" data-feature="SSLfinal_State">
+                  <option value="auto" selected>Auto</option>
+                  <option value="1">1 (HTTPS/Trusted)</option>
+                  <option value="0">0 (Uncertain)</option>
+                  <option value="-1">-1 (No SSL)</option>
+                </select>
+                <span class="param-hint">Whether the site uses trusted SSL</span>
+              </div>
+              <!-- 9 -->
+              <div class="param-group">
+                <label class="param-label" for="f-Domain_registeration_length">Domain Reg. Length</label>
+                <select class="param-select feature-select" id="f-Domain_registeration_length" data-feature="Domain_registeration_length">
+                  <option value="auto">Auto</option>
+                  <option value="1">1 (≥1 year)</option>
+                  <option value="-1" selected>-1 (&lt;1 year)</option>
+                </select>
+                <span class="param-hint">Domain registration duration</span>
+              </div>
+              <!-- 10 -->
+              <div class="param-group">
+                <label class="param-label" for="f-Favicon">Favicon</label>
+                <select class="param-select feature-select" id="f-Favicon" data-feature="Favicon">
+                  <option value="1" selected>1 (Internal)</option>
+                  <option value="-1">-1 (External)</option>
+                </select>
+                <span class="param-hint">Favicon loaded from same domain</span>
+              </div>
+              <!-- 11 -->
+              <div class="param-group">
+                <label class="param-label" for="f-port">Port</label>
+                <select class="param-select feature-select" id="f-port" data-feature="port">
+                  <option value="auto" selected>Auto</option>
+                  <option value="1">1 (Standard port)</option>
+                  <option value="-1">-1 (Non-standard)</option>
+                </select>
+                <span class="param-hint">Uses a standard port (80/443)</span>
+              </div>
+              <!-- 12 -->
+              <div class="param-group">
+                <label class="param-label" for="f-HTTPS_token">HTTPS Token</label>
+                <select class="param-select feature-select" id="f-HTTPS_token" data-feature="HTTPS_token">
+                  <option value="auto" selected>Auto</option>
+                  <option value="1">1 (Normal)</option>
+                  <option value="-1">-1 (HTTPS in domain name)</option>
+                </select>
+                <span class="param-hint">"HTTPS" appears in the domain name itself</span>
+              </div>
+              <!-- 13 -->
+              <div class="param-group">
+                <label class="param-label" for="f-Request_URL">Request URL</label>
+                <select class="param-select feature-select" id="f-Request_URL" data-feature="Request_URL">
+                  <option value="1" selected>1 (Internal)</option>
+                  <option value="-1">-1 (External)</option>
+                </select>
+                <span class="param-hint">% of external objects loaded</span>
+              </div>
+              <!-- 14 -->
+              <div class="param-group">
+                <label class="param-label" for="f-URL_of_Anchor">URL of Anchor</label>
+                <select class="param-select feature-select" id="f-URL_of_Anchor" data-feature="URL_of_Anchor">
+                  <option value="1">1 (Internal)</option>
+                  <option value="0" selected>0 (Mixed)</option>
+                  <option value="-1">-1 (External)</option>
+                </select>
+                <span class="param-hint">% of anchor tags pointing externally</span>
+              </div>
+              <!-- 15 -->
+              <div class="param-group">
+                <label class="param-label" for="f-Links_in_tags">Links in Tags</label>
+                <select class="param-select feature-select" id="f-Links_in_tags" data-feature="Links_in_tags">
+                  <option value="1">1 (Internal)</option>
+                  <option value="0" selected>0 (Mixed)</option>
+                  <option value="-1">-1 (External)</option>
+                </select>
+                <span class="param-hint">% of links in meta/script/link tags</span>
+              </div>
+              <!-- 16 -->
+              <div class="param-group">
+                <label class="param-label" for="f-SFH">SFH</label>
+                <select class="param-select feature-select" id="f-SFH" data-feature="SFH">
+                  <option value="1">1 (Normal)</option>
+                  <option value="0">0 (Blank)</option>
+                  <option value="-1" selected>-1 (Suspicious)</option>
+                </select>
+                <span class="param-hint">Server Form Handler — where form data goes</span>
+              </div>
+              <!-- 17 -->
+              <div class="param-group">
+                <label class="param-label" for="f-Submitting_to_email">Submit to Email</label>
+                <select class="param-select feature-select" id="f-Submitting_to_email" data-feature="Submitting_to_email">
+                  <option value="1" selected>1 (No)</option>
+                  <option value="-1">-1 (Yes)</option>
+                </select>
+                <span class="param-hint">Form submits data via email (mailto:)</span>
+              </div>
+              <!-- 18 -->
+              <div class="param-group">
+                <label class="param-label" for="f-Abnormal_URL">Abnormal URL</label>
+                <select class="param-select feature-select" id="f-Abnormal_URL" data-feature="Abnormal_URL">
+                  <option value="1" selected>1 (Normal)</option>
+                  <option value="-1">-1 (Abnormal)</option>
+                </select>
+                <span class="param-hint">Host name not in URL</span>
+              </div>
+              <!-- 19 -->
+              <div class="param-group">
+                <label class="param-label" for="f-Redirect">Redirect</label>
+                <select class="param-select feature-select" id="f-Redirect" data-feature="Redirect">
+                  <option value="0" selected>0 (≤1 redirect)</option>
+                  <option value="1">1 (≥2 redirects)</option>
+                </select>
+                <span class="param-hint">Number of redirects</span>
+              </div>
+              <!-- 20 -->
+              <div class="param-group">
+                <label class="param-label" for="f-on_mouseover">onMouseOver</label>
+                <select class="param-select feature-select" id="f-on_mouseover" data-feature="on_mouseover">
+                  <option value="1" selected>1 (Normal)</option>
+                  <option value="-1">-1 (Status bar changed)</option>
+                </select>
+                <span class="param-hint">onMouseOver changes status bar</span>
+              </div>
+              <!-- 21 -->
+              <div class="param-group">
+                <label class="param-label" for="f-RightClick">Right Click</label>
+                <select class="param-select feature-select" id="f-RightClick" data-feature="RightClick">
+                  <option value="1" selected>1 (Enabled)</option>
+                  <option value="-1">-1 (Disabled)</option>
+                </select>
+                <span class="param-hint">Right-click is disabled on the page</span>
+              </div>
+              <!-- 22 -->
+              <div class="param-group">
+                <label class="param-label" for="f-popUpWidnow">Pop-up Window</label>
+                <select class="param-select feature-select" id="f-popUpWidnow" data-feature="popUpWidnow">
+                  <option value="1" selected>1 (No pop-ups)</option>
+                  <option value="-1">-1 (Has pop-ups)</option>
+                </select>
+                <span class="param-hint">Page shows pop-up windows with forms</span>
+              </div>
+              <!-- 23 -->
+              <div class="param-group">
+                <label class="param-label" for="f-Iframe">Iframe</label>
+                <select class="param-select feature-select" id="f-Iframe" data-feature="Iframe">
+                  <option value="1" selected>1 (No iframe)</option>
+                  <option value="-1">-1 (Has iframe)</option>
+                </select>
+                <span class="param-hint">Page uses invisible iframes</span>
+              </div>
+              <!-- 24 -->
+              <div class="param-group">
+                <label class="param-label" for="f-age_of_domain">Age of Domain</label>
+                <select class="param-select feature-select" id="f-age_of_domain" data-feature="age_of_domain">
+                  <option value="1">1 (Old / ≥6 months)</option>
+                  <option value="-1" selected>-1 (New / &lt;6 months)</option>
+                </select>
+                <span class="param-hint">Domain age</span>
+              </div>
+              <!-- 25 -->
+              <div class="param-group">
+                <label class="param-label" for="f-DNSRecord">DNS Record</label>
+                <select class="param-select feature-select" id="f-DNSRecord" data-feature="DNSRecord">
+                  <option value="1">1 (Found)</option>
+                  <option value="-1" selected>-1 (Not found)</option>
+                </select>
+                <span class="param-hint">DNS record exists for the domain</span>
+              </div>
+              <!-- 26 -->
+              <div class="param-group">
+                <label class="param-label" for="f-web_traffic">Web Traffic</label>
+                <select class="param-select feature-select" id="f-web_traffic" data-feature="web_traffic">
+                  <option value="1">1 (High)</option>
+                  <option value="0">0 (Medium)</option>
+                  <option value="-1" selected>-1 (Low / No data)</option>
+                </select>
+                <span class="param-hint">Alexa/traffic rank</span>
+              </div>
+              <!-- 27 -->
+              <div class="param-group">
+                <label class="param-label" for="f-Page_Rank">Page Rank</label>
+                <select class="param-select feature-select" id="f-Page_Rank" data-feature="Page_Rank">
+                  <option value="1">1 (High)</option>
+                  <option value="-1" selected>-1 (Low)</option>
+                </select>
+                <span class="param-hint">Google PageRank value</span>
+              </div>
+              <!-- 28 -->
+              <div class="param-group">
+                <label class="param-label" for="f-Google_Index">Google Index</label>
+                <select class="param-select feature-select" id="f-Google_Index" data-feature="Google_Index">
+                  <option value="1" selected>1 (Indexed)</option>
+                  <option value="-1">-1 (Not indexed)</option>
+                </select>
+                <span class="param-hint">Page is indexed by Google</span>
+              </div>
+              <!-- 29 -->
+              <div class="param-group">
+                <label class="param-label" for="f-Links_pointing_to_page">Links Pointing to Page</label>
+                <select class="param-select feature-select" id="f-Links_pointing_to_page" data-feature="Links_pointing_to_page">
+                  <option value="1">1 (Many)</option>
+                  <option value="0" selected>0 (Some)</option>
+                  <option value="-1">-1 (Few / 0)</option>
+                </select>
+                <span class="param-hint">Number of external links pointing here</span>
+              </div>
+              <!-- 30 -->
+              <div class="param-group">
+                <label class="param-label" for="f-Statistical_report">Statistical Report</label>
+                <select class="param-select feature-select" id="f-Statistical_report" data-feature="Statistical_report">
+                  <option value="1" selected>1 (Not reported)</option>
+                  <option value="-1">-1 (Reported phishing)</option>
+                </select>
+                <span class="param-hint">URL appears in phishing databases</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Action buttons -->
+          <div class="action-buttons" id="action-buttons">
+            <button class="btn btn-primary" id="btn-analyze">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+              <span>Analyze URL</span>
+            </button>
+            <button class="btn btn-secondary" id="btn-reset">
+              <span>Reset</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Results section (hidden by default) -->
+      <div class="results-section" id="results-section" style="display:none;">
+        <div class="result-card" id="result-card">
+          <!-- Animated scanning bar -->
+          <div class="scan-bar" id="scan-bar"></div>
+
+          <!-- Result header -->
+          <div class="result-header" id="result-header">
+            <div class="result-icon" id="result-icon">
+              <!-- Dynamic icon inserted via JS -->
+            </div>
+            <div class="result-text">
+              <h2 class="result-title" id="result-title">Analyzing...</h2>
+              <p class="result-subtitle" id="result-subtitle">Scanning URL for phishing indicators</p>
+            </div>
+          </div>
+
+          <!-- Result details -->
+          <div class="result-details" id="result-details">
+            <div class="detail-row" id="detail-url">
+              <span class="detail-label">URL</span>
+              <span class="detail-value" id="detail-url-value">—</span>
+            </div>
+            <div class="detail-row" id="detail-confidence">
+              <span class="detail-label">Confidence</span>
+              <div class="confidence-bar-container">
+                <div class="confidence-bar" id="confidence-bar">
+                  <div class="confidence-fill" id="confidence-fill"></div>
+                </div>
+                <span class="confidence-value" id="confidence-value">—</span>
+              </div>
+            </div>
+            <div class="detail-row" id="detail-verdict">
+              <span class="detail-label">Verdict</span>
+              <span class="detail-value verdict-badge" id="detail-verdict-value">—</span>
+            </div>
+            <div class="detail-row" id="detail-model">
+              <span class="detail-label">Model</span>
+              <span class="detail-value" id="detail-model-value">—</span>
+            </div>
+          </div>
+
+          <!-- Feature breakdown -->
+          <div class="feature-breakdown" id="feature-breakdown">
+            <h3 class="breakdown-title">Feature Analysis</h3>
+            <div class="feature-grid" id="feature-grid">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer" id="footer">
+      <p>PhishGuard &copy; 2026 — AI-Powered Phishing Detection</p>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
